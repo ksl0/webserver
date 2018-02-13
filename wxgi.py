@@ -41,7 +41,7 @@ def return_files(zpf):
     try:
        return send_from_directory(sub_directory, "xenogi_output.zip")
     except Exception as e:
-        return "zipfile not ready, please wait " + str(e) + '\n'  + str(sub_directory)
+        return "zipfile not ready, please wait for the computation to finish " + str(e) 
 
 
 @app.route('/upload_files', methods=["GET", "POST"])
@@ -94,7 +94,7 @@ def upload_files():
     else:
        return "nope"
 
-@app.route('/run_program/<tree_fn>', methods = ['POST'])
+@app.route('/run_program/<tree_fn>', methods = ['POST', 'GET'])
 def runXenoGI(tree_fn):
     """ Runs xenoGI file programs
         After running xenoGI, [return_files] will directly download the zipfiles
@@ -110,7 +110,7 @@ def intermediate(tree_fn):
     Creates a intermediate page w/ a run button, the submitted files list, and the download link
     
     """
-    url = WEB_URL+  '/return-files/'+  tree_fn + '.zip'
+    url = os.path.join(WEB_URL, 'return-files',  tree_fn) + '.zip'
     return render_template("landing.html", tree_fn = tree_fn, url=url)
  
 def run_helper_xenoGI(data_filepath):
@@ -130,7 +130,8 @@ def run_helper_xenoGI(data_filepath):
         xeno_gi_step = os.path.join(XENO_GI_DIRECTORY, step)
         python_step = "python3 " + xeno_gi_step + " " + param_fn
         os.system(python_step)
-   
+  
+
     service = OutputFilesService(data_filepath, ['fam.out', 'islands.out'])
     service.create_zip()
 
