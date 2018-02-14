@@ -3,15 +3,19 @@ from flask import Flask, request, render_template, send_from_directory, Markup, 
 from werkzeug import secure_filename
 from werkzeug.debug import DebuggedApplication
 import os, datetime
+from os.path import basename
 from wsgiref.handlers import CGIHandler
 import cgitb
 import zipfile
 import io
+import glob
 
 cgitb.enable()
 
 
 app = Flask(__name__)
+
+PERSON = 'kxgicgi'
 
 ALLOWED_EXTENSIONS = set(['tre', 'newick', 'gbff'])
 
@@ -120,7 +124,8 @@ def run_helper_xenoGI(data_filepath):
     - Runs sequence of command to get xenoGI output
     @param file_directory: inner directory of the files 
     """
-    code_pipeline = ['parseGenbank.py', 'runBlast.py', 'calcScores.py', 'xenoGI.py']
+    code_pipeline = ['parseGenbank.py', 'runBlast.py', 'calcScores.py', 'xenoGI.py',
+                     'printAnalysis.py']
     param_fn = 'params.py'
 
     # copy the starter .txt files to current directory
@@ -130,9 +135,19 @@ def run_helper_xenoGI(data_filepath):
         xeno_gi_step = os.path.join(XENO_GI_DIRECTORY, step)
         python_step = "python3 " + xeno_gi_step + " " + param_fn
         os.system(python_step)
-  
+     
+    # writing the bed files too  
+    make_beds = os.path.join(XENO_GI_DIRECTORY, "misc", "createIslandBed.py")
+    BED_PARAM = str(100)
+    python_step_bedfiles = "python3 " +  make_beds + " " + param_fn + " " + BED_PARAM 
+    os.system(python_step_bedfiles) 
 
-    service = OutputFilesService(data_filepath, ['fam.out', 'islands.out'])
+    print(python_step_bedfiles)
+
+    output_files = glob.glob('*.out')
+    output_files = output_files + (glob.glob("bed/*"))
+
+    service = OutputFilesService(data_filepath, output_files)
     service.create_zip()
 
 
@@ -157,7 +172,7 @@ class OutputFilesService:
         print(file_list)
         with zipfile.ZipFile(self.zip_fn, 'w') as myzip:
             for fn in file_list: 
-                myzip.write(fn)
+                myzip.write(fn, basename(fn))
         myzip.close()
         # the path of the zipfile
         zipfile_path = os.path.join(directory, self.zip_fn) 
