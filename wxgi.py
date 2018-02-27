@@ -2,7 +2,7 @@
 from flask import Flask, request, render_template, send_from_directory, Markup, redirect, url_for
 from werkzeug import secure_filename
 from werkzeug.debug import DebuggedApplication
-import os, datetime
+import os, datetime, sys
 from os.path import basename
 from wsgiref.handlers import CGIHandler
 import cgitb
@@ -10,16 +10,19 @@ import zipfile
 import io
 import glob
 
-cgitb.enable()
+# for xenoGI code
+sys.path.append(os.path.join(sys.path[0],'../xenoGI/'))
+import parameters
 
+cgitb.enable()
 
 app = Flask(__name__)
 
 PERSON = 'kxgicgi'
-
+USER_DIR = 'katie'
 ALLOWED_EXTENSIONS = set(['tre', 'newick', 'gbff'])
 
-BASE_DIRECTORY= '/data/bushlab/htrans/katie/'
+BASE_DIRECTORY= os.path.join('/data/bushlab/htrans/', USER_DIR)
 CGI_DIRECTORY= os.path.join(BASE_DIRECTORY, PERSON)
 XENO_GI_DIRECTORY = os.path.join(BASE_DIRECTORY, 'xenoGI')
 WORK_DIRECTORY = os.path.join(BASE_DIRECTORY, 'xgiBox')
@@ -38,7 +41,7 @@ def hello_world():
 @app.route('/form')
 def form():
     """Returns the form page"""
-    return render_template('form.html', page='upload')
+    return render_template('form.html', person=PERSON, page='upload')
 
 @app.route('/return-files/<zpf>.zip')
 def return_files(zpf):
@@ -72,6 +75,15 @@ def upload_files():
             os.chdir(thisFolderName)
             treeFile.save(os.path.join(app.config['WORK_DIRECTORY'], thisFolderName, TREE_FN))
 
+ 
+            #rewrite the parameters file 
+            paramFN = os.path.join(CGI_DIRECTORY, "STARTER_FILES/params.py")
+            rootFCUserInput= request.form['rootFocal']        
+            paramD = parameters.loadParametersD(paramFN)
+            paramD['rootFocalClade'] = rootFCUserInput 
+            paramD['fileNameMapFN'] = None
+            writeParamFile(paramD, paramFN)
+
             #copy starter files over
             starter_files = os.path.join(CGI_DIRECTORY, "STARTER_FILES/*")
             system_command ="cp "+  starter_files + " " + (os.path.join(app.config['WORK_DIRECTORY'], thisFolderName))
@@ -93,6 +105,9 @@ def upload_files():
  
             # go to the tree files  
             # work around to be in the right directory
+
+
+           
             return redirect(url_for('intermediate', tree_fn = thisFolderName))
         else: #refer user back to the documentation 
             return render_template("documentation.html")
@@ -114,7 +129,7 @@ def intermediate(tree_fn):
     Creates a intermediate page w/ a run button, the submitted files list, and the download link
     """
     url = os.path.join(WEB_URL, 'return-files',  tree_fn) + '.zip'
-    return render_template("landing.html", tree_fn = tree_fn, url=url)
+    return render_template("landing.html", person=PERSON, tree_fn = tree_fn, url=url)
  
 def run_helper_xenoGI(data_filepath):
     """ 
@@ -148,6 +163,17 @@ def run_helper_xenoGI(data_filepath):
     service = OutputFilesService(data_filepath, output_files, bed_files)
     service.create_zip()
 
+def writeParamFile(param_dict, paramFilename):
+    with open(paramFilename, 'w') as fid:
+        for key in param_dict:
+            # check if value is a string file or not
+            # if it is, we need double quotes around it
+            if (isinstance(param_dict[key], str)):
+                line = '%s = \"%s\" \n' % (key, param_dict[key])
+            else:
+                line = "%s = %s \n" % (key, param_dict[key])
+            fid.write(line)
+    fid.close() 
 
 class OutputFilesService:
     def __init__(self, directory,file_list, bed_files):
