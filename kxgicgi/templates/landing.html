@@ -1,0 +1,26 @@
+<!doctype html>
+<title>xenoGI Program Runner</title>
+
+<h3>Upload complete</h3>
+
+<p> The webserver has uploaded your files. Please press the run button below to start xenoGI running on your uploaded data.</p>
+
+<form enctype="multipart/form-data" action="http://siva.cs.hmc.edu/{{person}}/wxgi.py/run_program/{{tree_fn}}" 
+method="POST">
+
+<h3><input type="submit" value="Run xenoGI Program"></h3><br>
+
+ </form>
+
+<p>If you stay on this page after clicking run, it will automatically download a zip file of the output once xenoGI is done. Depending on how many strains you are using, xenoGI can take anywhere from a few minutes to several hours.</p>
+
+If you want to close the browser page after hitting run, that's ok too. When xenoGI is done, your output zip fill will be at the following url: </p>
+
+{{url}} </p>
+
+If you check this url before the zip file output is complete, it will return an error page
+that tells you to wait. </p>
+
+
+
+

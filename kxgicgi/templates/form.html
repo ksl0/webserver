@@ -1,0 +1,15 @@
+
+ <form enctype="multipart/form-data" action="http://siva.cs.hmc.edu/{{person}}/wxgi.py/upload_files" 
+method="POST">
+
+<h3>Upload files for xenoGI</h3>
+   
+<br><label>Select a tree file to upload:</label><input type="file" name="newick">
+
+<br><label>Select a genbank gbff file to upload:</label><input type="file" multiple="" name="gbff[]">
+
+<br><label>Write the name of root focal clade </label><input type="text"  name="rootFocal">
+
+<h3><input type="submit" value="Submit"></h3><br>
+
+ </form>

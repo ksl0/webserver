@@ -1,0 +1,38 @@
+
+<h3>Brief documentation for the xenoGI web service</h3>
+
+Something about the inputs was not right. After looking at the documentation below, you can use back button, and try again.
+
+<h4>Input</h4>
+
+<ul>
+ <li> A phylogenetic tree newick format. This can have an extension of either .tre or .newick. The phylogenetic trees used by xenoGI require labeled internal nodes but no branch lengths. The example tree file distributed in the xenoGI package has these contents:<p>
+
+<tt>
+(((E_coli_K12,E_albertii)i0,E_fergusonii)i1,S_bongori)i2;
+</tt>
+<p>
+
+Here the three internal nodes are labelled i0, i1, and i2.
+
+ <li> Genbank files in gbff format with a .gbff extension. These files must be named to correspond to the species names in the tree file. For the example tree file above, we would need four genbank files: E_albertii.gbff, E_coli_K12.gbff, E_fergusonii.gbff, S_bongori.gbff.
+
+ <li> The user must also specify a focal clade by indicating an internal node that defines it. The full phylogenetic tree typically consists of the focal clade plus one or two outgroups. The focal clade is defines the set of species for which we will reconstruct genomic island insertions.
+   
+</ul>
+
+For this web service, we're allowing trees with up to 20 strains. If you need to do more than that, then you should run xenoGI locally.
+
+<h4>Output</h4>
+
+The output of this web service is a zip file. It contains
+
+<ul>
+ <li> <tt>islandsSummary.out</tt> is a summary of all the islands at each node on the tree
+
+ <li> A set of genesXXX.out files, where XXX is replaced by each species name. These contain all the genes in a strain laid out in the order they occur on the contigs. Each gene entry include island and family information, as well as a brief description of the gene's function.
+
+ <li> A bed directory, containing bed files which can be used to import the island information into a genome browser (islands will be color coded).
+   
+</ul>
+
